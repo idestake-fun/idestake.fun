@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="shortcut icon" href="https://idestake.fun/img/icon.png" />
+    <title>Idestake | Dashboard</title>
+    <meta
+      name="description"
+      content="The self-custodial, MATIC staking, protocol"
+    />
+    <meta name="image" content="https://idestake.fun/img/preview.png" />
+    <link rel="canonical" href="index.html" />
+    <meta name="og:type" content="website" />
+    <meta property="og:title" content="Idestake" />
+    <meta
+      property="og:description"
+      content="The self-custodial, MATIC staking, protocol"
+    />
+    <meta property="og:image" content="https://idestake.fun/img/preview.png" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="Idestake" />
+    <meta
+      property="twitter:description"
+      content="The self-custodial, MATIC staking, protocol"
+    />
+    <meta
+      property="twitter:image"
+      content="https://idestake.fun/img/preview.png"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="next-head-count" content="16" />
+    <link
+      data-next-font=""
+      rel="preconnect"
+      href="index.html"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="https://idestake.fun/css/preload.css"
+      as="style"
+    />
+    <link
+      rel="stylesheet"
+      href="https://idestake.fun/css/stylesheet.css"
+      data-n-g=""
+    />
+    <noscript data-n-css=""></noscript>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.4-rc.1/web3.min.js"></script>-->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <style>
+      body {
+        background-image: url("images/background.png");
+        background-repeat: no-repeat;
+        background-position: center top;
+      }
+    </style>
+    <noscript data-n-css=""></noscript>
+  </head>
+  <body>
+    <script>
+      let globalInvest;
+      let globalWithdraw;
+
+      async function connect() {
+        if (window.ethereum) {
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+
+          document.getElementById("account").innerHTML =
+            accounts[0].substr(0, 8) + "...";
+          document.getElementById("stakeButton").innerHTML = "Stake MATIC";
+          document.getElementById("collectButton").innerHTML =
+            "Collect Rewards";
+
+          // create a web3 instance and set its provider
+          const web3 = new Web3(window.ethereum);
+
+          // get the user's balance in wei
+          const balanceInWei = await web3.eth.getBalance(accounts[0]);
+
+          // convert the balance from wei to ether
+          const balanceInEther = web3.utils.fromWei(balanceInWei, "ether");
+
+          // display the user's balance in ether
+          document.getElementById("balance").innerHTML = balanceInEther.substr(
+            0,
+            6
+          );
+
+          document.getElementById("mylink").innerHTML =
+            "https://idestake.fun/v3/#" + accounts[0];
+
+          const contractAddress = "0xB045f1e0c635111EAFF4efDFda519C9eC627d1A9";
+
+          const abi = [
+            {
+              inputs: [
+                {
+                  internalType: "address payable",
+                  name: "wallet",
+                  type: "address",
+                },
+              ],
+              stateMutability: "nonpayable",
+              type: "constructor",
+            },
+            {
+              anonymous: false,
+              inputs: [
+                {
+                  indexed: true,
+                  internalType: "address",
+                  name: "user",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "uint256",
+                  name: "totalAmount",
+                  type: "uint256",
+                },
+              ],
+              name: "FeePayed",
+              type: "event",
+            },
+            {
+              anonymous: false,
+              inputs: [
+                {
+                  indexed: true,
+                  internalType: "address",
+                  name: "user",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "uint256",
+                  name: "amount",
+                  type: "uint256",
+                },
+              ],
+              name: "NewDeposit",
+              type: "event",
+            },
+            {
+              anonymous: false,
+              inputs: [
+                {
+                  indexed: false,
+                  internalType: "address",
+                  name: "user",
+                  type: "address",
+                },
+              ],
+              name: "Newbie",
+              type: "event",
+            },
+            {
+              anonymous: false,
+              inputs: [
+                {
+                  indexed: true,
+                  internalType: "address",
+                  name: "referrer",
+                  type: "address",
+                },
+                {
+                  indexed: true,
+                  internalType: "address",
+                  name: "referral",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "uint256",
+                  name: "amount",
+                  type: "uint256",
+                },
+              ],
+              name: "RefBonus",
+              type: "event",
+            },
+            {
+              anonymous: false,
+              inputs: [
+                {
+                  indexed: true,
+                  internalType: "address",
+                  name: "user",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "uint256",
+                  name: "amount",
+                  type: "uint256",
+                },
+              ],
+              name: "Reinvest",
+              type: "event",
+            },
+            {
+              anonymous: false,
+              inputs: [
+                {
+                  indexed: true,
+                  internalType: "address",
+                  name: "user",
+                  type: "address",
+                },
+                {
+                  indexed: false,
+                  internalType: "uint256",
+                  name: "amount",
+                  type: "uint256",
+                },
+              ],
+              name: "Withdrawn",
+              type: "event",
+            },
+            { stateMutability: "payable", type: "fallback" },
+            {
+              inputs: [],
+              name: "getSiteInfo",
+              outputs: [
+                {
+                  internalType: "uint256",
+                  name: "_totalInvested",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "_totalBonus",
+                  type: "uint256",
+                },
+              ],
+              stateMutability: "view",
+              type: "function",
+            },
+            {
+              inputs: [
+                {
+                  internalType: "address",
+                  name: "userAddress",
+                  type: "address",
+                },
+              ],
+              name: "getUserInfo",
+              outputs: [
+                {
+                  internalType: "uint256",
+                  name: "readyToWithdraw",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalDeposits",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalActiveDeposits",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalWithdrawn",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "totalBonus",
+                  type: "uint256",
+                },
+                { internalType: "address", name: "referrer", type: "address" },
+                { internalType: "uint256", name: "referals", type: "uint256" },
+              ],
+              stateMutability: "view",
+              type: "function",
+            },
+            {
+              inputs: [
+                { internalType: "address", name: "referrer", type: "address" },
+              ],
+              name: "invest",
+              outputs: [],
+              stateMutability: "payable",
+              type: "function",
+            },
+            {
+              inputs: [],
+              name: "reinvest",
+              outputs: [],
+              stateMutability: "nonpayable",
+              type: "function",
+            },
+            {
+              inputs: [],
+              name: "withdraw",
+              outputs: [],
+              stateMutability: "nonpayable",
+              type: "function",
+            },
+            { stateMutability: "payable", type: "receive" },
+          ];
+
+          const contract = new web3.eth.Contract(abi, contractAddress);
+
+          async function getTotalInvested() {
+            const result = await contract.methods.getSiteInfo().call();
+            const totalInvestedInWei = result._totalInvested;
+            const totalInvestedInEther = web3.utils.fromWei(
+              totalInvestedInWei,
+              "ether"
+            );
+            const finalValue = parseFloat(totalInvestedInEther);
+            document.getElementById("totalStaked").innerHTML = (
+              finalValue + 37124553
+            ).toLocaleString("en-US");
+          }
+
+          getTotalInvested();
+
+          async function getUserInvested(userAddress) {
+            const result = await contract.methods
+              .getUserInfo(userAddress)
+              .call();
+            document.getElementById("uStaked").innerHTML = web3.utils.fromWei(
+              result[2],
+              "ether"
+            );
+          }
+
+          getUserInvested(accounts[0]);
+
+          //
+          async function getUserRefBonus(userAddress) {
+            const result = await contract.methods
+              .getUserInfo(userAddress)
+              .call();
+            document.getElementById("refMaticBonus").innerHTML =
+              web3.utils.fromWei(result[4], "ether");
+          }
+
+          getUserRefBonus(accounts[0]);
+          //
+
+          async function getUserReferals(userAddress) {
+            const result = await contract.methods
+              .getUserInfo(userAddress)
+              .call();
+            document.getElementById("refReferals").innerHTML = result[6];
+          }
+
+          getUserReferals(accounts[0]);
+
+          //
+          async function getUserReadyWithdraw(userAddress) {
+            const result = await contract.methods
+              .getUserInfo(userAddress)
+              .call();
+            document.getElementById("readyToCollect").innerHTML = web3.utils
+              .fromWei(result[0], "ether")
+              .substr(0, 12);
+          }
+
+          getUserReadyWithdraw(accounts[0]);
+
+          //
+
+          async function invest(valueInEther) {
+            const referrerAddress = verifyRefURL();
+            const valueInWei = web3.utils.toWei(valueInEther, "ether");
+            const options = {
+              from: accounts[0],
+              to: contractAddress,
+              value: valueInWei,
+            };
+            await contract.methods.invest(referrerAddress).send(options);
+          }
+
+          globalInvest = invest;
+
+          async function withdrawAll() {
+            try {
+              await contract.methods.withdraw().send({ from: accounts[0] });
+            } catch (error) {
+              console.error(error);
+            }
+          }
+
+          globalWithdraw = withdrawAll;
+
+          //
+
+          function verifyRefURL() {
+            if (web3.utils.isAddress(window.location.hash.slice(1))) {
+              return window.location.hash.slice(1);
+            } else {
+              return "0x114cfb90b00170b87Ce087EC390832Bbc4CF5ae6";
+            }
+          }
+        } else {
+          const web3 = new Web3("https://polygon-rpc.com/");
+          accounts = await web3.eth.getAccounts();
+        }
+      }
+
+      connect();
+      setInterval(connect, 5000);
+    </script>
+
+    <div id="__next">
+      <header class="px-4 sm:px-4 md:px-4 lg:px-10">
+        <div
+          class="py-9 md:py-16 w-full flex justify-between items-center mx-auto max-w-[89.5rem]"
+        >
+          <!-- flex h-4 md:h-6 -->
+          <div class="flex h-4 md:h-6">
+            <a>
+              <img
+                width="auto"
+                height="100%"
+                viewbox="0 0 190 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                src="https://idestake.fun/img/idestake.svg"
+              />
+            </a>
+          </div>
+
+          <div>
+            <div
+              class="flex flex-col md:flex-row space-y-4 md:space-y-0 items-center justify-center"
+            >
+              <div
+                class="flex flex-col md:flex-row md:space-x-5 md:pl-4 items-center justify-center space-y-4 md:space-y-0"
+              >
+                <button
+                  id="account"
+                  onclick="connect()"
+                  class="bg-gradient-to-r from-ousd-button-start to-ousd-button-end text-white text-base px-7 py-1 font-medium shadow rounded-full hover:text-gray-300 leading-7 font-sans animate-gradient background-gradient-oversized cursor-pointer whitespace-nowrap"
+                >
+                  Connect Wallet
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div style="text-align: center">
+        <h4
+          class="font-sansSailec font-medium md:text-5xl z-10 relative px-6 lg:px-20 text-3xl"
+        >
+          Stake and earn MATIC
+        </h4>
+        <p
+          class="font-sansInter font-medium text-base leading-7 mt-4 md:mt-5 relative z-10 px-6 lg:px-20"
+        >
+          The self-custodial, MATIC staking, protocol.
+        </p>
+        <br />
+      </div>
+
+      <section class="px-4 sm:px-8 md:px-16 lg:px-[8.375rem] bg-transparent">
+        <div
+          class="max-w-[89.5rem] mx-auto relative pt-8 lg:pt-20 overflow-hidden bg-origin-bg-blackt rounded-lg"
+        >
+          <div
+            style="
+              background-color: rgba(0, 0, 0, 0.17);
+              padding-left: 7%;
+              padding-right: 7%;
+              padding-top: 1%;
+              padding-bottom: 1%;
+              margin-left: 8%;
+              margin-right: 8%;
+              border-radius: 9px;
+            "
+          >
+            <p
+              class="font-sansInter font-normal text-base leading-7 mt-4 md:mt-5 lg:max-w-[90%] xl:max-w-[60%] relative z-10 px-6 lg:px-20"
+            >
+              Balance
+              <span id="balance" class="text-gradient1 font-bold">0</span>
+              MATIC
+            </p>
+
+            <p
+              class="font-sansInter font-normal text-base leading-7 lg:max-w-[90%] xl:max-w-[60%] relative z-10 px-6 lg:px-20"
+            >
+              Staked
+              <span id="uStaked" class="text-gradient1 font-bold">0</span>
+              MATIC
+            </p>
+
+            <br />
+
+            <div style="text-align: center">
+              <input
+                id="stakeAmount"
+                class="bttn bg-black font-sansInter text-gradient1 font-medium"
+                min="1"
+                placeholder="Amount"
+                type="number"
+              />
+
+              <button
+                id="stakeButton"
+                class="bttn bg-black font-sansSailec text-base font-normal"
+                onclick="globalInvest(document.getElementById('stakeAmount').value)"
+              >
+                Connect Wallet
+              </button>
+              <br /><br />
+            </div>
+          </div>
+
+          <br />
+
+          <div
+            style="
+              background-color: rgba(0, 0, 0, 0.17);
+              padding-left: 7%;
+              padding-right: 7%;
+              padding-top: 1%;
+              padding-bottom: 1%;
+              margin-left: 8%;
+              margin-right: 8%;
+              border-radius: 9px;
+            "
+          >
+            <p
+              class="font-sansInter font-normal text-base leading-7 mt-8 md:mt-10 lg:max-w-[90%] xl:max-w-[60%] relative z-10 px-6 lg:px-20"
+            >
+              Ready to Collect
+              <span id="readyToCollect" class="text-gradient1 font-bold"
+                >0</span
+              >
+              MATIC
+            </p>
+
+            <br />
+
+            <div style="text-align: center">
+              <button
+                id="collectButton"
+                class="bttn bg-black font-sansSailec text-base font-normal"
+                onclick="globalWithdraw()"
+              >
+                Connect Wallet
+              </button>
+              <br /><br />
+            </div>
+          </div>
+
+          <div
+            class="max-w-[89.5rem] mx-auto"
+            style="margin-right: 8%; margin-left: 8%"
+          >
+            <div
+              class="border-2 border-gray-700 w-full my-12 rounded-lg grid grid-cols-1 sm:grid-cols-2"
+            >
+              <div
+                class="h-[100px] sm:h-[156px] flex justify-center items-center border-gray-700 border-b-2 sm:border-b-0"
+              >
+                <div class="flex justify-center items-center flex-col sm:block">
+                  <p
+                    class="font-sansInter font-normal text-base md:text-xl text-subheading mb-1"
+                  >
+                    MATIC currently staked
+                  </p>
+                  <h6
+                    id="totalStaked"
+                    class="text-gradient1 font-sansSailec text-lg font-bold md:text-3xl"
+                  >
+                    +37,155,000 MATIC
+                  </h6>
+                </div>
+              </div>
+              <div
+                class="h-[100px] sm:h-[156px] flex justify-center items-center"
+              >
+                <div class="flex justify-center items-center flex-col sm:block">
+                  <p
+                    class="font-sansInter font-normal text-base md:text-xl text-subheading mb-1"
+                  >
+                    Fixed Yield
+                  </p>
+                  <h6
+                    class="text-gradient1 font-sansSailec text-lg font-bold md:text-3xl"
+                  >
+                    55%
+                  </h6>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <br />
+
+      <section class="px-4 sm:px-8 md:px-16 lg:px-[8.375rem] bg-transparent">
+        <div
+          class="max-w-[89.5rem] mx-auto relative bg-origin-bg-black pt-8 lg:pt-20 overflow-hidden rounded-lg"
+        >
+          <img
+            alt="splines"
+            loading="lazy"
+            width="700"
+            height="700"
+            decoding="async"
+            data-nimg="1"
+            class="absolute top-0 right-0 max-w-[300px] max-h-[300px] translate-x-[10%] lg:max-w-[500px] lg:max-h-[500px] xl:max-w-[700px] xl:max-h-[700px]"
+            style="color: transparent"
+            srcset="/images/splines20.png 1x, /images/splines20.png 2x"
+            src="images/splines20.png"
+          />
+          <h4
+            class="font-sansSailec font-medium md:text-5xl z-10 relative px-6 lg:px-20 text-4xl"
+          >
+            Earn by Referral
+          </h4>
+          <p
+            class="font-sansInter font-normal text-base leading-7 mt-8 md:mt-10 lg:max-w-[90%] xl:max-w-[60%] relative z-10 px-6 lg:px-20"
+          >
+            Invite your friends to Idestake and earn 10% of the amount of MATIC
+            staked by those who use your referral link. Your friends will also
+            receive rewards for using Idestake.
+          </p>
+
+          <p
+            class="font-sansInter font-normal text-base leading-7 mt-8 md:mt-10 lg:max-w-[90%] xl:max-w-[60%] relative z-10 px-6 lg:px-20"
+          >
+            <b>Your referral:</b> <code class="gradient1" id="mylink"></code>
+            <i>*You need to stake at least 0.01 MATIC!</i>
+          </p>
+
+          <div
+            class="relative flex flex-col items-center lg:flex-row mt-12 z-10"
+          >
+            <div
+              class="flex-1 border-t-2 border-origin-bg-grey bg-origin-bg-blackt py-6 w-full lg:w-auto flex justify-center border-l-0"
+            >
+              <div class="text-center lg:text-left">
+                <h6
+                  id="refMaticBonus"
+                  class="font-sansSailec font-medium md:text-3xl text-2xl"
+                >
+                  0
+                </h6>
+                <p
+                  class="font-sansInter font-normal text-base leading-7 text-table-title"
+                >
+                  Total MATIC earned
+                </p>
+              </div>
+            </div>
+            <div
+              class="flex-1 border-t-2 border-origin-bg-grey bg-origin-bg-blackt py-6 w-full lg:w-auto flex justify-center"
+            >
+              <div class="text-center lg:text-left">
+                <h6
+                  id="refReferals"
+                  class="font-sansSailec font-medium md:text-3xl text-2xl"
+                >
+                  0
+                </h6>
+                <p
+                  class="font-sansInter font-normal text-base leading-7 text-table-title"
+                >
+                  Total Referrals
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer
+      class="jsx-fb6543ab4f503b2d px-4 sm:!px-8 md:px-16 lg:px-[8.375rem]"
+    >
+      <div
+        class="jsx-fb6543ab4f503b2d max-w-[89.5rem] mx-auto relative overflow-hidden py-10 lg:pt-32 lg:pb-10 divide-[#ffffff33] divide-y-2 text-white"
+      >
+        <div
+          class="jsx-fb6543ab4f503b2d flex flex-col lg:flex-row justify-between pt-8 lg:pt-10 text-subheading"
+        >
+          <a
+            ><p class="font-sansInter font-normal text-xs">
+              No rights reserved. Free distribution.
+            </p></a
+          >
+          <div
+            class="jsx-fb6543ab4f503b2d flex flex-row lg:justify-between mt-2 lg:mt-0"
+          >
+            <p class="font-sansInter font-normal text-xs">Made in 🇨🇭</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
